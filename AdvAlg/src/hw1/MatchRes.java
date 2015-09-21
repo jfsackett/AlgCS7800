@@ -39,7 +39,7 @@ public class MatchRes {
 			if (args.length > 2) {
 				s = Integer.parseInt(args[2]);
 			}
-			if (args.length > 3 || h > hs || hs > s) {
+			if (args.length > 3 || h > hs) { // || hs > s) {
 				printUsage();
 				System.exit(1);
 			}
