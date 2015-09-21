@@ -3,10 +3,7 @@ package hw1;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
 
 /*
 while exists unmatched hospital h
@@ -16,30 +13,25 @@ while exists unmatched hospital h
 	else
 	    decline
 */
-public class MatchRes {
+public class MatchResOnePos {
 	private final int numHosp;
 	private final int numStdnt;
-	private final int[] numHospPos;
 	private final Integer[][] hospPref;
 	private final Integer[][] stdntPref;
-	private Set<Integer>[] hospMatch;
+	private Integer[] hospMatch;
 	private Integer[] stdntMatch;
 	
 	public static void main(String[] args) {
-		int h = 16;
-		int hs = 180;
-		int s = 210;
+		int m = 16;
+		int n = 21;
 		try {
 			if (args.length > 0) {
-				h = Integer.parseInt(args[0]);
+				m = Integer.parseInt(args[0]);
 			}
 			if (args.length > 1) {
-				hs = Integer.parseInt(args[1]);
+				n = Integer.parseInt(args[1]);
 			}
-			if (args.length > 2) {
-				s = Integer.parseInt(args[2]);
-			}
-			if (args.length > 3 || h > hs || hs > s) {
+			if (args.length > 2 || m > n) {
 				printUsage();
 				System.exit(1);
 			}
@@ -49,62 +41,45 @@ public class MatchRes {
 			System.exit(1);
 		}
 
-		int[] numHospPos = new int[h];
-		for (int i=0; i < h; i++) {
-			numHospPos[i] = 1;
-		}
-		Random rand = new Random();
-		for (int j=hs-h; j > 0; j--) {
-			numHospPos[rand.nextInt(h)]++;
-		}
-		System.out.println("Available Hospital Positions:");
-		for (int i=0; i < h; i++) {
-			System.out.format("%4d", numHospPos[i]);
-		}
-		System.out.println("\n");
-		
-		Integer[][] hospPref = new Integer[h][s];
-		Integer[][] stdntPref = new Integer[s][h];
-		for (int i=0; i < h; i++) {
-			for (int j=0; j < s; j++) {
+		Integer[][] hospPref = new Integer[m][n];
+		Integer[][] stdntPref = new Integer[n][m];
+		for (int i=0; i < m; i++) {
+			for (int j=0; j < n; j++) {
 				hospPref[i][j] = j;
 				stdntPref[j][i] = i;
 			}
 		}
 		
 		System.out.println("Hospital to Student Preferences:");
-		for (int i=0; i < h; i++) {
+		for (int i=0; i < m; i++) {
 			List<Integer> shuff = Arrays.asList(hospPref[i]);
 			Collections.shuffle(shuff);
 			shuff.toArray(hospPref[i]);
-			for (int j=0; j < s; j++) {
+			for (int j=0; j < n; j++) {
 				System.out.format("%4d", hospPref[i][j]);
 			}
 			System.out.println();
 		}
 		System.out.println("\nStudent to Hospital Preferences:");
-		for (int j=0; j < s; j++) {
+		for (int j=0; j < n; j++) {
 			List<Integer> shuff = Arrays.asList(stdntPref[j]);
 			Collections.shuffle(shuff);
 			shuff.toArray(stdntPref[j]);
-			for (int i=0; i < h; i++) {
+			for (int i=0; i < m; i++) {
 				System.out.format("%4d", stdntPref[j][i]);
 			}
 			System.out.println();
 		}
 
-		MatchRes matching = new MatchRes(h, s, numHospPos, hospPref, stdntPref);
+		MatchResOnePos matching = new MatchResOnePos(m, n, hospPref, stdntPref);
 		matching.match();
 		System.out.println("\nHospital to Student Matches:");
-		for (int i=0; i < h; i++) {
-			for (Integer stdnt : matching.getHospMatch()[i]) {
-				System.out.format("%5d", stdnt);
-			}
-			System.out.println();
+		for (int i=0; i < m; i++) {
+			System.out.format("%5d", matching.getHospMatch()[i]);
 		}
 		System.out.println();
 		System.out.println("\nStudent to Hospital Matches:");
-		for (int j=0; j < s; j++) {
+		for (int j=0; j < n; j++) {
 			System.out.format("%5d", matching.getStdntMatch()[j]);
 		}
 		System.out.println("\n");
@@ -122,23 +97,19 @@ public class MatchRes {
 		System.err.println("such that: num-hospitals <= num-students");
 	}
 
-	public MatchRes(int h, int s, int[] numHospPos, Integer[][] hospPref, Integer[][] stdntPref) {
-		this.numHosp = h;
-		this.numStdnt = s;
-		this.numHospPos = numHospPos;
+	public MatchResOnePos(int m, int n, Integer[][] hospPref, Integer[][] stdntPref) {
+		this.numHosp = m;
+		this.numStdnt = n;
 		this.hospPref = hospPref;
 		this.stdntPref = stdntPref;
-		hospMatch = new HashSet[numHosp];
+		hospMatch = new Integer[numHosp];
 		stdntMatch = new Integer[numStdnt];
-		
-		for (int i=0; i < numHosp; i++) {
-			hospMatch[i] = new HashSet<Integer>(numHospPos[i]);
-		}
 	}
 	
 	public void match() {
 		List<Integer>[] hospFavs = new ArrayList[numHosp];
 		for (int i=0; i < numHosp; i++) {
+			hospMatch[i] = null;
 			hospFavs[i] = new ArrayList<Integer>(numStdnt);
 			for (int j=0; j < numStdnt; j++) {
 				hospFavs[i].add(hospPref[i][j]);
@@ -158,19 +129,19 @@ public class MatchRes {
 			Integer currStdntHosp = stdntMatch[currStdnt];
 			if (currStdntHosp == null) {
 				stdntMatch[currStdnt] = currHosp;
-				hospMatch[currHosp].add(currStdnt);
+				hospMatch[currHosp] = currStdnt;
 			}
 			else if (stdntPref[currStdnt][currHosp] > stdntPref[currStdnt][currStdntHosp]) {
 				stdntMatch[currStdnt] = currHosp;
-				hospMatch[currHosp].add(currStdnt);
-				hospMatch[currStdntHosp].remove(currStdnt);
+				hospMatch[currHosp] = currStdnt;
+				hospMatch[currStdntHosp] = null;
 			}
 		}
 	}
 	
 	private int getFreeHosp() {
 		for (int i=0; i < numHosp; i++) {
-			if (hospMatch[i].size() < numHospPos[i]) {
+			if (hospMatch[i] == null) {
 				return i;
 			}
 		}
@@ -201,7 +172,7 @@ public class MatchRes {
 		return true;
 	}
 	
-	public Set<Integer>[] getHospMatch() {
+	public Integer[] getHospMatch() {
 		return hospMatch;
 	}
 
